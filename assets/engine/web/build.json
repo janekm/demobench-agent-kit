@@ -1,0 +1,11 @@
+{
+  "supportedProfiles": [
+    "bootstrap-1",
+    "gpu-1",
+    "spu-1",
+    "dynamic-1"
+  ],
+  "abi": 1,
+  "wasmBytes": 192990,
+  "sha256": "fd523f43234209258eff3adc50873f136271f08a5ead5f2908e4aee7ee742ef8"
+}

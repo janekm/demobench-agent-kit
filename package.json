@@ -1,0 +1,15 @@
+{
+  "name": "demo-bench-agent-kit",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Portable DB32 demo authoring skill and pinned local validation engine",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "validate": "node scripts/validate.mjs",
+    "compress": "node scripts/compress.mjs",
+    "viewer": "node scripts/viewer.mjs",
+    "test": "node scripts/check.mjs && node scripts/check-compression.mjs",
+    "bundle": "node scripts/pack.mjs"
+  }
+}

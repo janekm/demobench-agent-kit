@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0b0e12" />
+    <title>DB32 / DemoBench</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="masthead">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+          <div>
+            <div class="eyebrow">A TINY MACHINE FOR BIG IDEAS</div>
+            <h1>Demo<span>Bench</span><sup>32</sup></h1>
+          </div>
+        </div>
+        <div class="machine-tag"><span class="pulse-dot"></span><span id="machine-label">INITIALIZING MACHINE</span><span class="tag-divider"></span><span id="profile-tag">BOOTSTRAP-1 / ABI 01</span></div>
+      </header>
+
+      <main class="workspace">
+        <section class="preview-panel" aria-labelledby="output-heading">
+          <div class="section-heading">
+            <div><p class="eyebrow">01 / OUTPUT</p><h2 id="output-heading">Live framebuffer</h2></div>
+            <div class="section-aside">160 × 120 <span>·</span> RGBA OUTPUT</div>
+          </div>
+
+          <div class="display-housing">
+            <div class="display-topline"><span>DB<span class="accent">32</span> DISPLAY</span><span id="frame-caption">FRAME 000000</span></div>
+            <div class="display-viewport">
+              <canvas id="screen" width="160" height="120" role="img" aria-label="DB32 machine video output"></canvas>
+              <div class="screen-overlay" id="screen-overlay"><div class="overlay-glyph">◇</div><strong>Warming up the machine</strong><span>Loading WebAssembly and demo source…</span></div>
+            </div>
+            <div class="display-footer"><span class="display-led" id="display-led"></span><span>VIDEO / <span id="format-label">—</span></span><span class="display-footer-right">120 SCANLINES · 204,800 TICKS / FRAME</span></div>
+          </div>
+
+          <div class="transport" aria-label="Playback controls">
+            <button id="play-button" class="button button-primary" type="button" disabled><span id="play-icon" aria-hidden="true">▶</span><span id="play-label">Play</span></button>
+            <button id="step-button" class="button" type="button" disabled><span aria-hidden="true">▸│</span> Step frame</button>
+            <button id="reset-button" class="button" type="button" disabled><span aria-hidden="true">↺</span> Reset</button>
+            <div class="transport-spacer"></div>
+            <button id="png-button" class="button button-quiet" type="button" disabled title="Save the published 160×120 frame as PNG">↓ PNG</button>
+          </div>
+          <div class="renderer-toolbar" id="renderer-toolbar" hidden>
+            <label for="renderer-select">RENDERER</label>
+            <select id="renderer-select" aria-label="GPU renderer" aria-describedby="renderer-active renderer-note" disabled>
+              <option value="auto">Auto · WebGPU preferred</option>
+              <option value="wasm">WASM · reference</option>
+              <option value="webgpu">WebGPU · fast</option>
+            </select>
+            <div class="renderer-state"><strong id="renderer-active">WASM · reference</strong><span id="renderer-note">Virtual tick budget applies to the reference renderer</span><span id="renderer-reason" hidden></span></div>
+          </div>
+          <div class="audio-toolbar" id="audio-toolbar" hidden>
+            <button id="sound-button" class="button button-quiet" type="button" aria-pressed="false" disabled>Sound on</button>
+            <label for="volume-slider">VOLUME</label>
+            <input id="volume-slider" type="range" min="0" max="100" value="50" aria-label="Audio volume" disabled />
+            <span id="volume-value">50%</span>
+            <span id="audio-output-status">Muted until Sound on</span>
+          </div>
+
+          <div class="telemetry" aria-label="Machine telemetry">
+            <div class="metric"><span class="metric-label">STATUS</span><strong id="status-value">LOADING</strong><span class="metric-detail" id="status-detail">Booting WebAssembly</span></div>
+            <div class="metric"><span class="metric-label">FRAMES</span><strong id="frames-value">—</strong><span class="metric-detail">Completed images</span></div>
+            <div class="metric"><span class="metric-label">TICKS</span><strong id="ticks-value">—</strong><span class="metric-detail">Machine time</span></div>
+            <div class="metric"><span class="metric-label">PROGRAM COUNTER</span><strong id="pc-value">—</strong><span class="metric-detail">Current instruction</span></div>
+          </div>
+          <div class="telemetry gpu-telemetry" id="gpu-telemetry" aria-label="GPU telemetry" hidden>
+            <div class="metric"><span class="metric-label">GPU</span><strong id="gpu-status-value">IDLE</strong><span class="metric-detail" id="gpu-status-detail">Dispatch state</span></div>
+            <div class="metric"><span class="metric-label" id="gpu-ticks-label">LAST DISPATCH</span><strong id="gpu-ticks-value">—</strong><span class="metric-detail" id="gpu-ticks-detail">Virtual ticks</span></div>
+            <div class="metric"><span class="metric-label" id="gpu-budget-label">FRAME BUDGET</span><strong id="gpu-budget-value">—</strong><span class="metric-detail" id="gpu-budget-detail">204,800 virtual ticks</span></div>
+            <div class="metric"><span class="metric-label">DISPATCHES</span><strong id="gpu-dispatches-value">0</strong><span class="metric-detail">Completed</span></div>
+          </div>
+          <div class="telemetry audio-telemetry" id="audio-telemetry" aria-label="SPU audio telemetry" hidden>
+            <div class="metric"><span class="metric-label">SPU BLOCKS</span><strong id="spu-blocks-value">0</strong><span class="metric-detail">256 stereo frames / block</span></div>
+            <div class="metric"><span class="metric-label">SAMPLES</span><strong id="spu-samples-value">0</strong><span class="metric-detail">Guest timeline frames</span></div>
+            <div class="metric"><span class="metric-label">BLOCK KERNEL</span><strong id="spu-kernel-value">—</strong><span class="metric-detail" id="spu-kernel-detail">WASM reference</span></div>
+            <div class="metric"><span class="metric-label">SPU PEAK</span><strong id="spu-peak-value">—</strong><span class="metric-detail">Last generated PCM block</span></div>
+          </div>
+          <div class="audio-playback" id="audio-playback" hidden>PCM playback queue <span id="audio-queue-value">0</span> frames · underruns <span id="audio-underruns-value">0</span> · output <span id="audio-played-value">0</span> frames · output peak <span id="audio-peak-value">0.00</span> · playback drops <span id="audio-drops-value">0</span> frames · SPU overruns <span id="spu-overruns-value">0</span></div>
+          <div class="message" id="message" role="status" aria-live="polite">Booting DB32…</div>
+        </section>
+
+        <section class="code-panel" aria-labelledby="source-heading">
+          <div class="section-heading code-heading"><div><p class="eyebrow">02 / SOURCE</p><h2 id="source-heading">Assembly studio</h2></div><span class="source-indicator" id="source-indicator">EXAMPLE</span></div>
+          <div class="editor-toolbar">
+            <label for="example-select">DEMO</label>
+            <select id="example-select" aria-label="Choose a demo" disabled>
+              <option value="examples/starter.asm">Minimal RGB starter</option>
+            </select>
+            <span class="toolbar-caret" aria-hidden="true">⌄</span>
+          </div>
+          <div class="quality-toolbar" id="quality-toolbar" hidden>
+            <label for="quality-select">RAY QUALITY</label>
+            <select id="quality-select" aria-label="GPU ray quality" aria-describedby="quality-hint" disabled>
+              <option value="" disabled>Custom constant</option>
+              <option value="0">Full detail · 160×120 rays</option>
+              <option value="1">Fast · 80×60 rays</option>
+            </select>
+            <span id="quality-hint">Display stays 160×120</span>
+          </div>
+          <div class="editor-wrap">
+            <div class="editor-meta"><span id="file-label">STARTER.ASM</span><span id="line-count">0 LINES</span></div>
+            <textarea id="source" spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off" aria-label="DB32 assembly source" placeholder="; Select a demo or write your own DB32 assembly" disabled></textarea>
+          </div>
+          <div class="editor-actions">
+            <button id="assemble-button" class="button button-accent" type="button" disabled><span aria-hidden="true">◆</span> Assemble &amp; run</button>
+            <button id="cartridge-button" class="button button-quiet" type="button" disabled title="Save the most recently assembled cartridge">↓ Cartridge</button>
+          </div>
+          <div class="source-hint"><span class="hint-icon">⌘</span><span><kbd>⌘</kbd> / <kbd>Ctrl</kbd> + <kbd>Enter</kbd> to assemble. Edit the source, build a cartridge, and watch it run.</span></div>
+          <details class="listing-panel" id="listing-panel"><summary>Assembly listing <span id="listing-size"></span></summary><pre id="listing"></pre></details>
+        </section>
+      </main>
+
+      <footer class="site-footer"><span id="footer-profile">DB32 / BOOTSTRAP-1 PROFILE</span><span id="footer-video">CPU-WRITTEN VIDEO · LOCAL WEBASSEMBLY</span><span>DESIGNED FOR DEMOS</span></footer>
+    </div>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

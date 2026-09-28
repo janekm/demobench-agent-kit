@@ -1,0 +1,4 @@
+interface:
+  display_name: "Demo-bench"
+  short_description: "Write and validate tiny DB32 audiovisual demos"
+  default_prompt: "Use $demo-bench to create a tiny demo and validate it with the bundled local engine."
