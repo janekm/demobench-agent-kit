@@ -78,3 +78,19 @@ GPU mnemonics have `g.` prefix and registers g0..g31. All instructions are 32-bi
 |42|g.jmp label|all fields zero, next word target|
 
 Vector sources must fit registers (start<=29; sphere c<=28), destinations start1..29. Scalar d=0 discards result. IEEE signed zero is preserved; fmin of mixed signed zeros is -0, fmax is +0. Float inputs/results must be finite or deterministic arithmetic fault (including overflow/divide0); no NaN payload nondeterminism. No fused operations, fast-math, transcendental approximations or hidden native scene renderer. Float helper steps use binary32 in written order. `g.sphere` uses sqrt of nonnegative disc, both roots divided by a. Negative disc returns -1. `g.norm3` sums x*x + y*y + z*z in that order. Memory returns raw bits and only float consumers validate them.
+
+## Accelerated execution work guard
+
+WebGPU uses a conservative per-invocation termination guard of **1,048,576
+instructions for GPU jobs**, or **65,536 for SPU jobs**. Every reference
+instruction costs at least one compute tick, so a successful reference job
+cannot contain an invocation exceeding the corresponding guard. This bound
+is not divided by the number of invocations or waves: lanes may take different
+paths and do very different amounts of work. There is no separate 8,192-step
+cartridge requirement.
+
+The canonical budgets remain the whole-job **tick** limits, including setup
+and all waves; WebGPU's instruction guard is only a bound on accelerated work,
+not equivalent metering or a replacement for reference validation. Native
+float arithmetic can still differ. Device errors and host timeouts retain
+their existing WASM fallback behavior.

@@ -70,7 +70,7 @@ async function runMachineFrame() {
       const descriptor = {
         rom: copyBytes(wasm.db_rom_ptr(), wasm.db_rom_len()),
         ram: copyBytes(wasm.db_ram_ptr(), wasm.db_ram_len()), allowRamCode: wasm.db_profile() === 4,
-        codeBase: read(0), codeLength: read(4), width: read(8), height: read(12),
+        codeBase: read(0), codeLength: read(4), width: read(8), height: read(12), processor: 'gpu',
         bindings: Array.from({ length: 4 }, (_, i) => ({ base: read(0x40 + 16 * i), len: read(0x44 + 16 * i), flags: read(0x48 + 16 * i) })),
       };
       let result;
@@ -102,7 +102,7 @@ async function runMachineFrame() {
       const descriptor = {
         rom: copyBytes(wasm.db_rom_ptr(), wasm.db_rom_len()),
         ram: copyBytes(wasm.db_ram_ptr(), wasm.db_ram_len()), allowRamCode: wasm.db_profile() === 4,
-        codeBase: read(0), codeLength: read(4), width: read(8), height: read(12), allowReadWrite: true,
+        codeBase: read(0), codeLength: read(4), width: read(8), height: read(12), allowReadWrite: true, processor: 'spu',
         bindings: Array.from({ length: 4 }, (_, i) => ({ base: read(0x40 + 16 * i), len: read(0x44 + 16 * i), flags: read(0x48 + 16 * i) })),
       };
       let result;

@@ -47,8 +47,8 @@ export class WebGpuBackend {
 
   async pipeline(descriptor) {
     // Code and descriptor identity are exact, not a collision-prone short hash.
-    const { codeBase, codeLength, bindings, width, height, allowReadWrite = false, allowRamCode = false } = descriptor;
-    const key = JSON.stringify([codeBase, codeLength, width, height, bindings, allowReadWrite, allowRamCode,
+    const { codeBase, codeLength, bindings, width, height, allowReadWrite = false, allowRamCode = false, processor = 'gpu' } = descriptor;
+    const key = JSON.stringify([codeBase, codeLength, width, height, bindings, allowReadWrite, allowRamCode, processor,
       descriptor.rom.length, Array.from(kernelBytes(descriptor))]);
     if (this.cache.has(key)) return this.cache.get(key);
     const compiled = compileKernel(descriptor);

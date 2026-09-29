@@ -42,8 +42,10 @@ that point, and the compiler decodes the selected range at its absolute guest
 address. Pipeline cache identity includes the exact kernel bytes, addresses and
 descriptors, so rewriting a literal at the same RAM address recompiles it.
 Shader code is immutable for the submitted dispatch. Ordinary bounds checks,
-the 8192-step preview limit, arithmetic limitations and WASM fallback still
-apply. Native WebGPU floating-point results remain a preview, not canonical
+arithmetic limitations and WASM fallback still apply. The per-invocation
+termination guards are 1,048,576 instructions for GPU jobs and 65,536 for SPU
+jobs, derived from the reference work budgets; there is no separate 8,192-step
+limit. Native WebGPU floating-point results remain a preview, not canonical
 WASM equivalence.
 
 ## Authoring

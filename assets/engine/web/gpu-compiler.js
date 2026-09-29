@@ -8,7 +8,12 @@
 const RAM_BASE = 0x10000;
 const MIRROR_BYTES = 0x30000;
 const MAX_CODE_BYTES = 4096;
-const STEP_LIMIT = 8192;
+// A reference instruction costs at least one compute tick. Thus no invocation
+// in a successful reference job can execute more instructions than the whole
+// job's tick budget, even with divergent lanes or an uneven distribution of
+// work between waves. Do not divide this bound by the grid size or wave count.
+// This is a conservative termination guard, not reference timing emulation.
+const INVOCATION_STEP_LIMIT = Object.freeze({ gpu: 1_048_576, spu: 65_536 });
 const DOUBLE_WORD = new Set([1, 40, 41, 42]);
 const VECTOR_DEST = new Set([28, 29, 30, 32, 33]);
 const VECTOR_A = new Set([28, 29, 30, 31, 32, 33, 34]);
@@ -241,13 +246,13 @@ function basicBlocks(instructions) {
   return blocks;
 }
 
-function shader(blocks, codeBase, bindings) {
+function shader(blocks, codeBase, bindings, stepLimit) {
   const cases = blocks.map(block => {
     const code = block.map((inst, i) => `        {
           ${instructionCode(inst, bindings, i === block.length - 1)}
         }`).join('\n');
     return `      case ${u(block[0].pc)}: {
-        if (steps > ${u(STEP_LIMIT - block.length)}) { fail(2u); return; }
+        if (steps > ${u(stepLimit - block.length)}) { fail(2u); return; }
         steps += ${u(block.length)};
 ${code}
       }`;
@@ -316,21 +321,24 @@ export function kernelBytes({ rom, ram, codeBase, codeLength, allowRamCode = fal
   return ram.subarray(codeBase - RAM_BASE, codeBase - RAM_BASE + codeLength);
 }
 
-export function compileKernel({ rom, ram, codeBase, codeLength, bindings, width, height, allowReadWrite = false, allowRamCode = false }) {
+export function compileKernel({ rom, ram, codeBase, codeLength, bindings, width, height, allowReadWrite = false, allowRamCode = false, processor = 'gpu' }) {
   const codeBytes = kernelBytes({ rom, ram, codeBase, codeLength, allowRamCode });
   width = uint(width, 'width');
   height = uint(height, 'height');
   requireRange(typeof allowReadWrite === 'boolean', 'allowReadWrite must be boolean');
+  requireRange(processor === 'gpu' || processor === 'spu', 'processor must be gpu or spu');
+  const stepLimit = INVOCATION_STEP_LIMIT[processor];
   requireRange(width >= 1 && width <= 160 && height >= 1 && height <= 120, 'grid exceeds 160x120');
   const descriptors = validateBindings(bindings, rom.byteLength);
   const instructions = decode(codeBytes, codeBase, codeLength, descriptors, allowReadWrite);
   const blocks = basicBlocks(instructions);
   return {
-    code: shader(blocks, codeBase, descriptors),
+    code: shader(blocks, codeBase, descriptors, stepLimit),
     entryPoint: 'main',
     workgroupSize: 64,
     instructionCount: instructions.length,
     blockCount: blocks.length,
+    invocationStepLimit: stepLimit,
     writableBindings: descriptors.filter(b => b.flags === 3).map(({ index, base, len }) => ({ index, base, len })),
     statusFlags: { bounds: 1, budget: 2, arithmetic: 4, contention: 8 },
   };

@@ -48,3 +48,9 @@ Aligned 32-bit only; unknown register accesses fault. The reserved word in each 
 Use the [gpu-1 instruction encoding](gpu.md). No audio-specific synthesis opcodes. The same compiler lowers kernels to WGSL. Native GPU arithmetic prioritizes speed; it need not reproduce WASM floats or cross-invocation store order. Each invocation may read/write its own state and output; algorithms with cross-invocation dependencies should use reference WASM or explicit phases/blocks. Hardware read/write loads use atomic memory operations, but those do not turn data races into deterministic algorithms. Buffer bounds, tail masking and bounded instruction loops remain enforced. Invalid hardware jobs fall back to the original pending reference job before output is copied.
 
 Hardware output returns to guest RAM, then the SPU validates/copies the same PCM format. The central machine freezes at the block event while awaiting hardware, so later CPU commands cannot race that block. AudioWorklet playback is a separate bounded queue, resampling 48 kHz PCM to the device rate. It starts muted and needs an explicit user gesture. Queue underruns produce silence; pause/reset/rebuild flush playback. Reference WAV capture uses exactly the WASM-generated PCM.
+
+The SPU WebGPU termination guard permits **65,536 instructions per invocation**.
+Since each reference instruction costs at least one compute tick, any invocation
+in a block that passes the canonical 65,536-tick whole-block budget fits this
+guard. It is not divided by the invocation count and does not introduce a
+separate authoring limit. Reference validation still defines work acceptance.
