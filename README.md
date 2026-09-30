@@ -34,6 +34,17 @@ writing the cartridge. Decoder bytes count toward the 4 KiB payload. Read
 for kernel snapshots and budgets. Compression, validation and preview all run
 offline with Node; no Rust compiler or engine checkout is needed.
 
+## Experimental packing
+
+`npm run compress:research -- ./demo.asm -o ./demo.db32 --load 0x2c000` runs an
+optional wider search for RAM-only `dynamic-1` programs. It includes the standard
+compressor's winner, so the selected payload cannot grow. New byte contexts,
+range-coded LZ and smaller decoder instructions saved 16–158 bytes on eight
+frozen cartridges; extraction and 120-frame video/audio parity were verified.
+Some smaller results take longer to unpack. Temporary scratch starts at
+`0x10000`, is cleared at handoff, and overlapping models are skipped. Read
+[experimental packing](references/packing-research.md) for results and scope.
+
 ## Give to an agent
 
 Share this repository and ask the agent to follow `SKILL.md`. It can run the tools directly, or install a copy of the kit as the `demo-bench` folder in its skills directory. Paths are resolved relative to the kit, so it can be cloned or extracted anywhere.

@@ -47,3 +47,13 @@ canonical frame/audio checks, and browser real-time performance are separate.
 The same cartridge runs on the updated deployed Studio at
 https://demobench.janekm.com/studio. Paste `.packed.asm` there or in the local
 viewer. Profiles and snapshot semantics are in [dynamic-1](dynamic.md).
+
+## Experimental search
+
+For RAM-only `dynamic-1` sources, `scripts/compress-research.mjs` (or
+`npm run compress:research --`) adds byte contexts, range-coded LZ and decoder
+shortening. Its options are `SOURCE.asm -o OUTPUT.db32 [--load 0x2c000]`.
+Scratch is fixed at `0x10000`; candidates requiring overlapping scratch are
+skipped. It retains the standard packer's result when smaller and verifies
+exact guest extraction. It can also rescue images whose baseline pack exceeds
+4 KiB. See [experimental packing](packing-research.md) for measured tradeoffs.

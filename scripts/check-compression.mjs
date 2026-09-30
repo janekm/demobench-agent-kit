@@ -70,20 +70,25 @@ try {
   assert.throws(() => linker.link('unknown_instruction'), /unknown/);
   assert.equal(linker.exports.db_image_len(), 0);
   assert.equal(linker.link('.org 0x2d000\n.entry entry\nentry: halt').entry, 0x2d000);
-  const source = join(temp, 'dynamic.asm'), cartridge = join(temp, 'dynamic.db32');
+  const source = join(temp, 'dynamic.asm');
+  let baselineBytes;
+  for (const compressor of ['compress.mjs', 'compress-research.mjs']) {
+  const stem = join(temp, compressor.replace('.mjs', '')), cartridge = `${stem}.db32`;
   writeFileSync(source, large);
   // Absolute Node executable and empty PATH prove compression does not invoke Cargo or native tools.
-  const run = spawnSync(process.execPath, [join(root, 'scripts/compress.mjs'), source, '-o', cartridge],
+  const run = spawnSync(process.execPath, [join(root, 'scripts', compressor), source, '-o', cartridge],
     { cwd: temp, env: { ...process.env, PATH: '' }, encoding: 'utf8', timeout: 60000 });
   assert.equal(run.status, 0, run.stderr || String(run.error));
-  const report = JSON.parse(readFileSync(join(temp, 'dynamic.json')));
+  const report = JSON.parse(readFileSync(`${stem}.json`));
   assert.ok(report.sourceBytes > 8000);
   assert.ok(report.payloadBytes <= 4096);
+  if (compressor === 'compress.mjs') baselineBytes = report.payloadBytes;
+  else { assert.ok(report.payloadBytes <= baselineBytes); assert.ok(report.research.selected); }
   assert.equal(report.linkerWasmSha256, linker.sha256);
   assert.ok(report.verification.exactRamImage);
   const machine = createMachine(), cart = readFileSync(cartridge);
   assert.equal(report.canonicalWasmSha256, machine.wasmHash);
-  assert.equal(hash(machine.assemble(readFileSync(join(temp, 'dynamic.packed.asm'), 'utf8'))), hash(cart));
+  assert.equal(hash(machine.assemble(readFileSync(`${stem}.packed.asm`, 'utf8'))), hash(cart));
   machine.load(cart);
   for (let i = 0; i < 3; i++) { machine.runFrames(1); machine.audio(); }
   const ram = new DataView(machine.exports.memory.buffer, machine.exports.db_ram_ptr(), 131072);
@@ -91,7 +96,7 @@ try {
   assert.equal(machine.info().gpu.dispatches, 2);
   assert.equal(machine.info().audio.peak, 0.25);
   assert.equal(machine.info().audio.overruns, 0);
-  const out = join(temp, 'validation');
+  const out = join(temp, `validation-${compressor}`);
   const validation = spawnSync(process.execPath, [join(root, 'scripts/validate.mjs'), cartridge, '--frames', '3', '--out', out],
     { cwd: temp, env: { ...process.env, PATH: '' }, encoding: 'utf8', timeout: 60000 });
   assert.equal(validation.status, 0, validation.stderr || String(validation.error));
@@ -99,5 +104,6 @@ try {
   assert.equal(captured.machine.profile, 'dynamic-1');
   assert.equal(captured.audio.peak, 0.25);
   assert.ok(readFileSync(join(out, 'audio.wav')).length > 44);
-  console.log(`PASS: Node-only compression ${report.sourceBytes} -> ${report.payloadBytes} bytes, RAM kernel edits, SPU audio, packed source and cartridge validation.`);
+  console.log(`PASS: ${compressor}: Node-only compression ${report.sourceBytes} -> ${report.payloadBytes} bytes, RAM kernel edits, SPU audio, packed source and cartridge validation.`);
+  }
 } finally { rmSync(temp, { recursive: true, force: true }); }

@@ -42,6 +42,14 @@ is cleared before handoff. The generated `.packed.asm` can be pasted into the
 viewer or deployed Studio. Validate the packed cartridge for its full sequence;
 successful extraction alone does not prove safe later buffer use or good output.
 
+For an optional wider search on RAM-only `dynamic-1` sources, use
+`node "$DEMO_BENCH/scripts/compress-research.mjs" ./demo.asm -o ./demo.db32 --load 0x2c000`.
+It tries additional contexts, decoder shortening and range-coded LZ, keeping the
+standard packer's winner when smaller. Scratch is fixed at `0x10000`; overlapping
+models are skipped. Read [experimental packing](references/packing-research.md)
+for startup costs, tested results and limits. The standard compressor remains
+the default.
+
 Validation also accepts `.db32`. It runs the reference WASM engine and writes `demo.db32`, sampled PNGs, `report.json`, and stereo `audio.wav` for SPU cartridges. `--frames` is virtual 60 Hz frames (1–3600); choose enough to cover startup and the intended sequence. Exit failure means assembly, load, runtime or capture failure. Success means only that the requested interval ran: inspect the images and audition audio for the requested artistic result. Check payload, GPU work and audio peaks/overruns in the report.
 
 The viewer serves on localhost:4173 (`PORT=4174` selects another port). Paste the source into its editor and **Assemble & run**; **Sound on** enables audio. WASM is canonical. WebGPU is a faster preview with different arithmetic/timing; verify the reported active backend if acceleration matters. GPU loads from writable bindings fall back to WASM; SPU permits each invocation to access its own persistent state. Avoid dependencies between concurrent invocations.
